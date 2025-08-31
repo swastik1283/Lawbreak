@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import socket from '../socket.js';
 import dice1 from '../assets/dice1.jpg'
 import dice2 from '../assets/dice2.jpg'
 import dice3 from '../assets/dice3.jpg'
@@ -8,41 +9,47 @@ import dice6 from '../assets/dice6.jpg'
 const Dice = () => {
   const [diceValue, setDiceValue] = useState(null);
   const [rolling, setRolling] = useState(false);
-  const[player1,setplayer1]=useState(6);
-  const[player2,setplayer2]=useState(6);
+  const[playerId,setplayerId]=useState(null);
+  const[currentTurn,setCurrentTurn]=useState(null);
+  const[myTurn,setMyTurn]=useState(false);
 
-  const[turn,setturn]=useState(1);
 
-  const handleroll=(diceValue)=>{
-    if(turn===1){
-      setplayer1(prev=>prev+diceValue)
-      setturn(2);
-    }
-    else{
-      setplayer2(prev=>prev+diceValue);
-      setturn(1);
-
-    }
-  }
 
   const diceImages = { 1: dice1, 2: dice2, 3: dice3, 4: dice4,5:dice5,6:dice6 };
 
-  const rollDice = () => {
-    setRolling(true);
-    let rolls = 10;
-    const interval = setInterval(() => {
-      const rand = Math.floor(Math.random() * 6) + 1; // 1-4
-      setDiceValue(rand);
-      handleroll(rand)
-      rolls--;
-      if (rolls === 0) {
-        clearInterval(interval);
-        setRolling(false);
-      
-      }
-    }, 100);
-  };
+  useEffect(()=>{
+    const handleConnect=()=>{
+    setplayerId(socket.id);
+    }
+    setMyTurn(currentTurn===playerId);
 
+    socket.on("player-rolled",({playerId,dice})=>{
+      setDiceValue(dice);
+       setRolling(false);
+    })
+
+    socket.on("turn-change",({turn})=>{
+      setCurrentTurn(turn)
+        setMyTurn(turn===playerId);
+            });
+
+    return()=>{
+       socket.off("connect", handleConnect);
+      socket.off("player-rolled");
+      socket.off("turn-change");
+    };
+},[playerId,currentTurn])
+
+useEffect(()=>{
+  setMyTurn(currentTurn===playerId);
+
+},[currentTurn,playerId])
+  const rollDice = () => {
+    if(!myTurn) return ;
+    setRolling(true);
+
+    socket.emit("roll-dice");
+  }
   return (
   
 <div>
@@ -62,10 +69,10 @@ const Dice = () => {
 
         <button
           onClick={rollDice}
-          disabled={rolling}
+          disabled={rolling || !myTurn}
           className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl shadow-md hover:bg-indigo-700 transition disabled:opacity-50"
         >
-          {rolling ? 'Rolling...' : 'Roll Dice'}
+          {rolling ? 'Rolling...' :myTurn?'Roll Dice':"Wait..."}
         </button>
      
      </div>
