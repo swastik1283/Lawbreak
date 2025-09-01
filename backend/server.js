@@ -16,12 +16,11 @@ import { GameManager } from './gameManager.js';
     game.handleroll(socket);
  })
  socket.on('disconnect',()=>{
-    console.log("PLayer disconnected",socket.id)
+    console.log("Player disconnected",socket.id)
     game.removePlayer(socket.id);
- }
-);
+ });
 
-})
+});
 
 const PORT=5000;
 server.listen(PORT,()=>console.log(`server running on port${PORT}`))
