@@ -5,6 +5,8 @@ export class Player{
         this.position=0;
         this.ready=false;
         this.movesleft=6;
+        this.score=0;
+      
     }
 
     rollDice(){
@@ -17,5 +19,8 @@ export class Player{
 
     hasMovesleft(){
         return this.movesleft>0;
+    }
+    winner(){
+        this.player=t
     }
 }
